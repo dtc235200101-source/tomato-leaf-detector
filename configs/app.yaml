@@ -1,0 +1,22 @@
+host: 127.0.0.1
+port: 8000
+device: auto
+default_model: yolo11s_coco
+allowed_image_sizes: [320, 416, 640]
+models:
+  yolo11s_coco:
+    display_name: YOLO11s fine-tuned from COCO
+    architecture: yolo11s
+    checkpoint: weights/yolo11s_coco/best.pt
+tomato_gate:
+  enabled: true
+  checkpoint: weights/tomato_gate/best.pt
+  positive_class: tomato_leaf
+  threshold: 0.8
+  image_size: 224
+live:
+  confidence_threshold: 0.25
+  nms_iou: 0.5
+  image_size: 640
+  max_detections: 50
+  max_frame_bytes: 4000000

@@ -1,0 +1,37 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "tomato-leaf-detector"
+version = "0.1.0"
+description = "Local PlantDoc tomato-leaf data preparation pipeline"
+requires-python = ">=3.10,<3.13"
+dependencies = [
+  "typer>=0.12,<1",
+  "PyYAML>=6,<7",
+  "Pillow>=10,<12",
+  "ImageHash>=4.3,<5",
+]
+
+[project.scripts]
+tdet = "tomato_det.cli:app"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]
+addopts = "-ra"
+
+[tool.ruff]
+target-version = "py310"
+line-length = 100
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]
+
+[tool.ruff.lint.per-file-ignores]
+# The DOCX builder stores long Vietnamese report paragraphs as literal strings.
+"reports/docx_qa/*.py" = ["E501"]

@@ -1,0 +1,18 @@
+experiment_id: yolo11s_coco
+model_id: yolo11s_coco
+architecture: yolo11s
+# Download this checkpoint manually from an official Ultralytics release, then place it here.
+# Training never downloads it automatically.
+pretrained_weights: weights/bootstrap/yolo11s.pt
+data_yaml: data/processed/tomato_yolo/dataset.yaml
+run_dir: runs/yolo11s_coco
+image_size: 640
+epochs: 100
+patience: 25
+# Conservative starting point for the detected 4 GB GPU; tune only after recording the change.
+batch: 2
+workers: 0
+optimizer: auto
+seed: 42
+device: auto
+cache: false

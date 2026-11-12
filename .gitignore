@@ -1,0 +1,25 @@
+.venv/
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+.env
+
+# PlantDoc and generated artifacts; only documentation and split manifests are tracked.
+data/raw/**
+!data/raw/.gitkeep
+data/interim/**
+!data/interim/.gitkeep
+data/processed/**
+!data/processed/.gitkeep
+data/samples/**
+!data/samples/README.md
+runs/**
+!runs/.gitkeep
+weights/**/*.pt
+weights/**/*.onnx
+weights/**/*.engine
+frontend/node_modules/
+frontend/dist/
+

@@ -1,0 +1,14 @@
+services:
+  - type: web
+    name: tomato-leaf-detector-api
+    runtime: docker
+    plan: starter
+    healthCheckPath: /api/health
+    autoDeploy: false
+    envVars:
+      - key: TDET_DEVICE
+        value: cpu
+      - key: TDET_MAX_LOADED_MODELS
+        value: "1"
+      - key: TDET_LOG_LEVEL
+        value: INFO

@@ -1,0 +1,9 @@
+# Install torch and torchvision first using the selector at https://pytorch.org/get-started/locally/.
+# They are intentionally not pinned here because CPU/CUDA wheels differ by platform.
+ultralytics>=8.3,<9
+torchmetrics>=1.4,<2
+pycocotools>=2.0.7,<3
+scikit-learn>=1.4,<2
+pandas>=2.2,<3
+tqdm>=4.66,<5
+matplotlib>=3.8,<4

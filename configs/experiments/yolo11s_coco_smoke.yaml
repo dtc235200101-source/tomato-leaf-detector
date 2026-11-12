@@ -1,0 +1,24 @@
+# Compute-constrained MVP experiment.
+#
+# It produces a real checkpoint on CPU so the full pipeline (train -> predict ->
+# eval -> report -> demo) can be executed end-to-end without a GPU. Metrics from
+# this run are real, but the run is deliberately short and must be reported with
+# its limitations (see reports/REPORT.md).
+#
+# batch=4 and workers=0 keep the peak commit well below this machine's limit; a
+# batch of 8 exhausted the Windows commit limit during a longer run.
+experiment_id: yolo11s_coco_smoke
+model_id: yolo11s_coco
+architecture: yolo11s
+pretrained_weights: weights/bootstrap/yolo11s.pt
+data_yaml: data/processed/tomato_yolo/dataset.yaml
+run_dir: runs/yolo11s_coco_smoke
+image_size: 320
+epochs: 10
+patience: 10
+batch: 4
+workers: 0
+optimizer: auto
+seed: 42
+device: cpu
+cache: false

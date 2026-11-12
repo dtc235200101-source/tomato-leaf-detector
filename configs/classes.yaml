@@ -1,0 +1,55 @@
+classes:
+  - id: 0
+    name_source: Tomato Early blight leaf
+    slug: early_blight
+    name_vi: "Úa sớm (đốm vòng)"
+    group: fungal_oomycete
+    color: "#E76F51"
+  - id: 1
+    name_source: Tomato Septoria leaf spot
+    slug: septoria_leaf_spot
+    name_vi: "Đốm lá Septoria"
+    group: fungal_oomycete
+    color: "#F4A261"
+  - id: 2
+    name_source: Tomato leaf bacterial spot
+    slug: bacterial_spot
+    name_vi: "Đốm vi khuẩn"
+    group: bacterial
+    color: "#E9C46A"
+  - id: 3
+    name_source: Tomato leaf late blight
+    slug: late_blight
+    name_vi: "Mốc sương (úa muộn)"
+    group: fungal_oomycete
+    color: "#2A9D8F"
+  - id: 4
+    name_source: Tomato leaf mosaic virus
+    slug: mosaic_virus
+    name_vi: "Virus khảm"
+    group: viral
+    color: "#577590"
+  - id: 5
+    name_source: Tomato leaf yellow virus
+    slug: yellow_virus
+    name_vi: "Virus vàng/xoăn lá"
+    group: viral
+    color: "#F94144"
+  - id: 6
+    name_source: Tomato mold leaf
+    slug: leaf_mold
+    name_vi: "Mốc lá"
+    group: fungal_oomycete
+    color: "#43AA8B"
+  - id: 7
+    name_source: Tomato two spotted spider mites leaf
+    slug: spider_mites
+    name_vi: "Nhện hai chấm"
+    group: pest
+    color: "#9B5DE5"
+  - id: 8
+    name_source: Tomato leaf
+    slug: healthy
+    name_vi: "Lá khỏe"
+    group: healthy
+    color: "#06D6A0"

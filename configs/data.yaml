@@ -1,0 +1,12 @@
+raw_dir: data/raw/plantdoc
+train_images_dir: TRAIN
+test_images_dir: TEST
+train_labels: train_labels.csv
+test_labels: test_labels.csv
+processed_yolo_dir: data/processed/tomato_yolo
+processed_coco_dir: data/processed/tomato_coco
+splits_dir: data/splits
+val_fraction: 0.15
+seed: 42
+phash_distance: 6
+image_extensions: [".jpg", ".jpeg", ".png", ".bmp", ".webp"]

@@ -1,0 +1,686 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Phát hiện bệnh lá cà chua trong ảnh thực địa — Demo</title>
+<style>
+  :root{
+    --green-900:#14532d; --green-700:#15803d; --green-600:#16a34a; --green-500:#22c55e;
+    --green-100:#dcfce7; --green-50:#f0fdf4;
+    --ink:#1c2b22; --muted:#5b6b60; --line:#d9e5dc; --card:#ffffff; --bg:#f6faf7;
+    --radius:16px;
+  }
+  *{box-sizing:border-box; margin:0; padding:0}
+  body{font-family:'Segoe UI',system-ui,sans-serif; background:var(--bg); color:var(--ink); min-height:100vh}
+  .wrap{max-width:1080px; margin:0 auto; padding:18px 20px 60px}
+
+  /* Header */
+  header{display:flex; align-items:center; justify-content:space-between;
+    background:linear-gradient(120deg,#166534,#15803d 55%,#16a34a);
+    border:1px solid #14532d; border-radius:var(--radius);
+    padding:14px 20px; margin:14px 0 12px;
+    box-shadow:0 4px 14px rgba(21,128,61,.28)}
+  .brand{display:flex; align-items:center; gap:12px}
+  .logo{width:52px;height:52px;border-radius:14px;flex-shrink:0;
+    background:linear-gradient(135deg,#f0fdf4,#dcfce7 60%,#fef3c7);
+    display:flex;align-items:center;justify-content:center;
+    box-shadow:0 3px 10px rgba(0,0,0,.25), inset 0 0 0 1px rgba(255,255,255,.8)}
+  .brand h1{font-size:21px; line-height:1.2}
+  .brand h1 .grad{background:linear-gradient(90deg,#fecaca,#fed7aa 45%,#bbf7d0);
+    -webkit-background-clip:text; background-clip:text; color:transparent; font-weight:800}
+  .brand p{font-size:12.5px; color:#d1fae5}
+
+  /* Tabs */
+  .tabs{display:flex; gap:6px; background:var(--card); border:1px solid var(--line);
+    border-radius:var(--radius); padding:6px; margin-bottom:16px}
+  .tab{flex:1; text-align:center; padding:10px 8px; border-radius:10px; cursor:pointer;
+    font-size:14px; font-weight:600; color:var(--muted); border:none; background:transparent}
+  .tab:hover{color:var(--green-700)}
+  .tab.active{background:var(--green-700); color:#fff}
+
+  /* Layout */
+  .grid{display:grid; grid-template-columns:1fr 1fr; gap:16px; align-items:start}
+  @media(max-width:860px){.grid{grid-template-columns:1fr}}
+  .card{background:var(--card); border:1px solid var(--line); border-radius:var(--radius); padding:18px}
+  .card h2{font-size:15px; display:flex; align-items:center; gap:8px; margin-bottom:14px}
+
+  /* Upload */
+  .cam-btn{width:100%; padding:11px; border:1px solid var(--green-100); background:var(--green-50);
+    color:var(--green-700); font-weight:600; font-size:13.5px; border-radius:10px; cursor:pointer; margin-bottom:12px}
+  .cam-btn:hover{background:var(--green-100)}
+  .drop{border:2px dashed #b9d8c2; border-radius:14px; background:var(--green-50);
+    padding:34px 16px; text-align:center; cursor:pointer; transition:.15s}
+  .drop:hover,.drop.over{border-color:var(--green-600); background:var(--green-100)}
+  .drop .ic{font-size:34px}
+  .drop b{display:block; margin:8px 0 4px; font-size:14px}
+  .drop small{color:var(--muted); font-size:12px}
+  .urlrow{display:flex; gap:8px; margin-top:12px}
+  .urlrow input{flex:1; padding:9px 12px; border:1px solid var(--line); border-radius:10px; font-size:13px}
+  .urlrow button{padding:9px 14px; border:1px solid var(--line); background:#fff; border-radius:10px;
+    font-size:13px; cursor:pointer; color:var(--muted)}
+  .analyze{width:100%; margin-top:14px; padding:12px; border:none; border-radius:999px;
+    background:linear-gradient(90deg,var(--green-600),var(--green-500)); color:#fff;
+    font-size:15px; font-weight:700; cursor:pointer}
+  .analyze:hover{filter:brightness(1.05)}
+  .tips{margin-top:14px; font-size:12.5px; color:var(--muted); line-height:1.8}
+  .preview-box{margin-top:12px; display:none}
+  .preview-box img{max-width:100%; border-radius:12px; border:1px solid var(--line)}
+
+  /* Result */
+  .empty{display:flex; flex-direction:column; align-items:center; text-align:center;
+    color:var(--muted); padding:46px 20px; font-size:13.5px; gap:12px}
+  .empty .ic{font-size:40px; opacity:.55}
+  .res{display:none}
+  .res-head{display:flex; align-items:center; justify-content:space-between; margin-bottom:12px}
+  .pill{font-size:11.5px; padding:4px 10px; border-radius:999px; font-weight:700}
+  .det{display:flex; align-items:center; gap:10px; border:1px solid var(--line);
+    border-radius:12px; padding:10px 12px; margin-bottom:8px; font-size:13px}
+  .dot{width:12px;height:12px;border-radius:50%; flex-shrink:0}
+  .det .conf{margin-left:auto; font-weight:700; font-size:12.5px}
+  .advice{margin-top:12px; background:var(--green-50); border:1px solid var(--green-100);
+    border-radius:12px; padding:12px 14px; font-size:13px; line-height:1.7; color:#234d33}
+  .advice b{color:var(--green-900)}
+
+  /* Dataset viewer */
+  .stats{display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin-bottom:14px}
+  @media(max-width:640px){.stats{grid-template-columns:repeat(2,1fr)}}
+  .stat{background:var(--green-50); border:1px solid var(--green-100); border-radius:12px;
+    padding:12px; text-align:center}
+  .stat b{display:block; font-size:20px; color:var(--green-700)}
+  .stat span{font-size:11.5px; color:var(--muted)}
+  .seg{display:inline-flex; border:1px solid var(--line); border-radius:999px; overflow:hidden; margin-bottom:14px}
+  .seg button{padding:7px 18px; border:none; background:#fff; font-size:13px; font-weight:600;
+    color:var(--muted); cursor:pointer}
+  .seg button.active{background:var(--green-700); color:#fff}
+  .gal{display:grid; grid-template-columns:repeat(auto-fill,minmax(96px,1fr)); gap:8px}
+  .gal figure{border:1px solid var(--line); border-radius:10px; overflow:hidden; cursor:pointer; text-align:center}
+  .gal img{width:100%; height:84px; object-fit:cover; display:block}
+  .gal figcaption{font-size:9.5px; color:var(--muted); padding:3px 3px 5px;
+    white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+  .cls-table{width:100%; border-collapse:collapse; font-size:12.5px; margin-top:6px}
+  .cls-table th{background:var(--green-50); color:var(--green-900); text-align:left; padding:7px 10px}
+  .cls-table td{border-bottom:1px solid var(--line); padding:7px 10px}
+  .tag{font-size:10.5px; padding:2px 8px; border-radius:999px; font-weight:600}
+
+  /* Library */
+  .lib{display:grid; grid-template-columns:repeat(auto-fill,minmax(230px,1fr)); gap:12px}
+  .lib .item{border:1px solid var(--line); border-radius:14px; padding:14px; background:#fff}
+    .lib .item h3{font-size:13.5px; margin:8px 0 4px}
+  .lib .item p{font-size:12px; color:var(--muted); line-height:1.6}
+  .lib-img{width:100%; height:130px; object-fit:cover; border-radius:10px; border:1px solid var(--line);
+    cursor:zoom-in; display:block; background:#f2f7f4}
+  .lib-img:hover{filter:brightness(1.04)}
+  .lx{position:fixed; inset:0; background:rgba(10,25,16,.88); display:none; z-index:50;
+    align-items:center; justify-content:center; flex-direction:column; gap:12px; padding:24px}
+  .lx img{max-width:min(90vw,900px); max-height:78vh; border-radius:14px; border:3px solid #fff}
+  .lx p{color:#d9efe0; font-size:14px}
+  .lx button{position:absolute; top:18px; right:22px; font-size:26px; border:none; cursor:pointer;
+    background:none; color:#fff}
+  .warnbox{margin-bottom:10px; background:#fef6dd; border:1px solid #f5dfa8; border-radius:12px;
+    padding:12px 14px; font-size:13px; line-height:1.65; color:#6d5200}
+
+  .hint{margin-top:18px; text-align:center; font-size:12px; color:var(--muted)}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- Header -->
+  <header>
+    <div class="brand">
+      <div class="logo">
+        <svg viewBox="0 0 64 64" width="40" height="40">
+          <defs>
+            <linearGradient id="lgTomato" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0" stop-color="#ff6b6b"/><stop offset="1" stop-color="#e73838"/>
+            </linearGradient>
+            <linearGradient id="lgLeaf" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0" stop-color="#7bd88f"/><stop offset="1" stop-color="#2a9d8f"/>
+            </linearGradient>
+          </defs>
+          <circle cx="32" cy="38" r="20" fill="url(#lgTomato)"/>
+          <path d="M32 18c-2-6 2-10 6-12-1 6-2 8-6 12z" fill="url(#lgLeaf)"/>
+          <path d="M32 20c-4-3-9-3-12-1 4 3 8 3 12 1z" fill="url(#lgLeaf)"/>
+          <path d="M32 20c4-3 9-3 12-1-4 3-8 3-12 1z" fill="url(#lgLeaf)"/>
+          <circle cx="24" cy="32" r="5" fill="#ffffff" opacity=".35"/>
+          <path d="M22 47c2 3 6 4 9 2" stroke="#fff" stroke-width="2.5" fill="none" stroke-linecap="round" opacity=".6"/>
+        </svg>
+      </div>
+      <div>
+        <h1><span class="grad">Phát hiện bệnh lá cà chua</span></h1>
+        <p>trong ảnh thực địa · YOLOv11 — nhận dạng, khoanh vùng &amp; hướng dẫn xử lý</p>
+      </div>
+    </div>
+  </header>
+
+  <!-- Tabs: 3 tab như mẫu Rice Doctor (+ tab Dữ liệu dataset mới) -->
+  <div class="tabs">
+    <button class="tab active" data-t="scan">🖼️ Nhận dạng bệnh qua ảnh</button>
+    <button class="tab" data-t="live">📷 Camera trực tiếp</button>
+    <button class="tab" data-t="data">🗂️ Dữ liệu dataset</button>
+    <button class="tab" data-t="lib">📖 Thư viện bệnh</button>
+  </div>
+
+  <!-- TAB 1: Nhận dạng -->
+  <div id="t-scan">
+    <div class="grid">
+      <div class="card">
+        <h2>🍃 Ảnh lá cà chua</h2>
+
+        <!-- Stage: ảnh thay chỗ dropzone khi đã nạp (giống web cũ "Tải ảnh lên") -->
+        <div id="stage" style="position:relative; display:none; margin-bottom:12px; border-radius:12px; overflow:hidden; background:#0d1f14">
+          <img id="stageImg" style="width:100%; display:block" alt="ảnh phân tích">
+          <canvas id="stageCanvas" style="position:absolute; inset:0; width:100%; height:100%"></canvas>
+        </div>
+        <button class="analyze" id="stageAnalyze" style="display:none">🔍 Phân tích bệnh</button>
+
+        <button class="cam-btn" onclick="alert('[DEMO] Mở camera — bản chính thức sẽ nối WebSocket ws://... đã có sẵn trong dự án')">📷 Mở camera soi bệnh</button>
+        <div class="drop" id="drop">
+          <div class="ic">☁️</div>
+          <b>Kéo thả ảnh vào đây</b>
+          <small>hoặc nhấp để chọn ảnh &middot; phím Ctrl+V &middot; JPG, PNG, WebP</small>
+        </div>
+        <div class="urlrow">
+          <input placeholder="🔗 Hoặc dán link ảnh trên mạng (https://...)">
+          <button>Phân tích link</button>
+        </div>
+        <div class="tips">
+          &bull; Chụp cận cảnh một chi tiết lá, để bệnh rõ nét.<br>
+          &bull; Dùng ảnh đủ sáng, không chụp ngược sáng hay trong bóng tối.<br>
+          &bull; Ảnh tải từ mạng nên lọc trước — chất lượng ảnh quyết định độ tin cậy của kết quả.
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>✅ Kết quả &amp; hướng xử lý</h2>
+
+        <div class="empty" id="resEmpty">
+          <div class="ic">🔍</div>
+          <p>Mở camera, tải ảnh hoặc dán link ảnh lá cà chua để nhận kết quả<br>cùng hướng phòng và hướng điều trị.</p>
+        </div>
+
+        <div class="res" id="resBox">
+          <div class="res-head">
+            <b id="resTitle" style="font-size:14px">Kết quả (2)</b>
+            <span class="pill" style="background:var(--green-100);color:var(--green-700)">yolo11s_coco · <b id="resMs">—</b> ms</span>
+          </div>
+          <div id="detList"></div>
+
+          <!-- Điều khiển giống ControlsPanel web cũ -->
+          <div style="margin-top:14px; font-size:12.5px; color:var(--muted); line-height:1.9">
+            <b style="color:var(--ink)">Tham số (điều khiển panel web cũ):</b><br>
+            Model: <b>yolo11s_coco</b> (đóng — đúng model báo cáo) ·
+            imgsz: <b>640</b> · iou: <b>0.5</b><br>
+           	conf: <input id="scanConf" type="range" min="0.05" max="0.9" step="0.05" value="0.25" style="width:120px"> <b id="scanConfVal">0.25</b>
+            <label style="margin-left:10px"><input type="checkbox" id="hideHealthy" checked> ẩn lớp healthy</label>
+          </div>
+
+          <div class="advice">
+            <b>Hướng xử lý đề xuất:</b><br>
+            1. Cắt bỏ và tiêu hủy lá nhiễm nặng, tránh tưới trực tiếp lên tán lá.<br>
+            2. Phun thuốc đồng hoặc Mancozeb, lặp lại sau 7 ngày.<br>
+            3. Cách ly cây bệnh, kiểm tra các cây lân cận trong bán kính 1–2 m.<br>
+            <i>⚠️ Kết quả AI chỉ mang tính tham khảo, không thay thế kỹ sư nông nghiệp.</i>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB LIVE: Camera trực tiếp (YOLO11s qua WebSocket backend) -->
+  <div id="t-live" style="display:none">
+    <div class="grid">
+      <div class="card">
+        <h2>📷 Camera trực tiếp — YOLO11s</h2>
+        <div style="position:relative; border-radius:12px; overflow:hidden; background:#0d1f14; aspect-ratio:4/3">
+          <video id="liveVideo" autoplay playsinline muted style="width:100%; height:100%; object-fit:cover; display:none"></video>
+          <canvas id="liveCanvas" style="position:absolute; inset:0; width:100%; height:100%; display:none"></canvas>
+          <div id="livePlaceholder" style="position:absolute; inset:0; display:flex; flex-direction:column; gap:10px; align-items:center; justify-content:center; color:#9fd4ab; font-size:13.5px; text-align:center">
+            <span style="font-size:42px">📷</span>
+            <span>Camera tắt — nhấn "Bật camera" để bắt đầu<br>và nhận khung nhận dạng YOLO11s theo thời gian thực</span>
+          </div>
+        </div>
+        <div style="display:flex; gap:10px; margin-top:12px">
+          <button class="analyze" id="camOn" style="margin-top:0; flex:1">▶️ Bật camera</button>
+          <button class="cam-btn" id="camOff" style="margin:0; width:auto; padding:12px 18px">⏹ Dừng</button>
+        </div>
+        <div class="res-head" style="margin-top:14px">
+          <span id="wsStatus" class="pill" style="background:#f1f5f2; color:var(--muted)">● Chưa kết nối AI</span>
+          <span id="fpsBadge" class="pill" style="background:var(--green-50); color:var(--green-700)">FPS — · latency — ms</span>
+        </div>
+        <label style="display:block; margin-top:12px; font-size:12.5px; color:var(--muted)">
+          Ngưỡng tin cậy (conf): <b id="confVal">0.25</b>
+          <input id="confSlider" type="range" min="0.05" max="0.9" step="0.05" value="0.25" style="width:100%">
+        </label>
+      </div>
+
+      <div class="card">
+        <h2>✅ Nhận dạng theo thời gian thực</h2>
+        <div class="empty" id="liveEmpty">
+          <div class="ic">🌿</div>
+          <p>Khung hiển thị các vùng bệnh phát hiện trên từng khung hình<br>khi camera bật và AI (yolo11s_coco) hoạt động.</p>
+        </div>
+        <div id="liveDets"></div>
+        <div class="advice" style="margin-top:14px">
+          <b>Cách chạy AI:</b> backend phải chạy sẵn — lệnh
+          <code style="font-size:11.5px">tdet serve</code> hoặc <code style="font-size:11.5px">uvicorn ... --port 8000</code>
+          trong dự án; trang sẽ tự kết nối WebSocket
+          <code style="font-size:11.5px">ws://127.0.0.1:8000/ws</code> và gửi khung JPEG — đúng giao thức frontend React hiện tại, model <b>yolo11s_coco</b>.
+        </div>
+        <div class="tips">
+          &bull; Giữ lá trong khung hình sáng và gần camera.<br>
+          &bull; AI chưa kết nối vẫn xem được camera, nhưng chưa có khung YOLO.<br>
+          &bull; Tab "Dữ liệu dataset" cho phép đối chiếu ảnh val/test.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB 2: Dữ liệu dataset (chức năng mới) -->
+  <div id="t-data" style="display:none">
+    <div class="card">
+      <h2>🗂️ Dữ liệu dataset — PlantDoc (tomato)</h2>
+
+      <div class="stats">
+        <div class="stat"><b>620</b><span>ảnh train</span></div>
+        <div class="stat"><b>30</b><span>ảnh val</span></div>
+        <div class="stat"><b>69</b><span>ảnh test</span></div>
+        <div class="stat"><b>9</b><span>lớp bệnh</span></div>
+      </div>
+
+      <div style="display:flex; gap:14px; align-items:center; flex-wrap:wrap; margin-bottom:10px">
+        <div class="seg" id="segSplit">
+          <button class="active" data-s="val">val (30)</button>
+          <button data-s="test">test (69)</button>
+          <button data-s="train">train (mẫu)</button>
+        </div>
+        <small style="color:var(--muted)">Nhấp ảnh để xem — bản chính thức sẽ đọc qua API backend</small>
+      </div>
+
+      <div class="gal" id="gallery"></div>
+
+      <h2 style="margin-top:22px">🏷️ 9 lớp bệnh (configs/classes.yaml)</h2>
+      <table class="cls-table">
+        <tr><th>ID</th><th>Lớp</th><th>Tên tiếng Việt</th><th>Nhóm</th></tr>
+        <tr><td>0</td><td>early_blight</td><td>Úa sớm (đốm vòng)</td><td><span class="tag" style="background:#e7f0e9">nấm</span></td></tr>
+        <tr><td>1</td><td>septoria_leaf_spot</td><td>Đốm lá Septoria</td><td><span class="tag" style="background:#e7f0e9">nấm</span></td></tr>
+        <tr><td>2</td><td>bacterial_spot</td><td>Đốm vi khuẩn</td><td><span class="tag" style="background:#fdf6e0">vi khuẩn</span></td></tr>
+        <tr><td>3</td><td>late_blight</td><td>Mốc sương (úa muộn)</td><td><span class="tag" style="background:#e7f0e9">nấm</span></td></tr>
+        <tr><td>4</td><td>mosaic_virus</td><td>Virus khảm</td><td><span class="tag" style="background:#e4ecf3">virus</span></td></tr>
+        <tr><td>5</td><td>yellow_virus</td><td>Virus vàng/xoăn lá</td><td><span class="tag" style="background:#e4ecf3">virus</span></td></tr>
+        <tr><td>6</td><td>leaf_mold</td><td>Mốc lá</td><td><span class="tag" style="background:#e7f0e9">nấm</span></td></tr>
+        <tr><td>7</td><td>spider_mites</td><td>Nhện hai chấm</td><td><span class="tag" style="background:#f2e8fa">côn trùng</span></td></tr>
+        <tr><td>8</td><td>healthy</td><td>Lá khỏe</td><td><span class="tag" style="background:#defaf0">khỏe</span></td></tr>
+      </table>
+    </div>
+  </div>
+
+  <!-- TAB 3: Thư viện bệnh -->
+  <div id="t-lib" style="display:none">
+    <div class="card">
+      <h2>📖 Thư viện bệnh lá cà chua</h2>
+      <div class="lib" id="libGrid"></div>
+    </div>
+  </div>
+
+  <!-- Lightbox xem ảnh minh họa -->
+  <div class="lx" id="lightbox">
+    <button>✕</button>
+    <img id="lxImg" alt="phóng to">
+    <p id="lxTitle"></p>
+  </div>
+</div>
+
+<script>
+/* Tabs */
+document.querySelectorAll('.tab').forEach(b=>b.addEventListener('click',()=>{
+  document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
+  b.classList.add('active');
+  ['scan','live','data','lib'].forEach(t=>document.getElementById('t-'+t).style.display='none');
+  document.getElementById('t-'+b.dataset.t).style.display='';
+}));
+
+/* ---------- Nhận dạng ảnh: kéo ảnh vào → thay dropzone bằng ảnh (giống web cũ) ---------- */
+const drop=document.getElementById('drop');
+const leftCard=drop.closest('.card');
+const camBtn=leftCard.querySelector('.cam-btn');
+const urlRow=leftCard.querySelector('.urlrow');
+const tips=leftCard.querySelector('.tips');
+const stage=document.getElementById('stage'), stageImg=document.getElementById('stageImg'),
+      stageCanvas=document.getElementById('stageCanvas'), sctx=stageCanvas.getContext('2d');
+const COLORS2={"early_blight":"#E76F51","septoria_leaf_spot":"#F4A261","bacterial_spot":"#E9C46A","late_blight":"#2A9D8F","mosaic_virus":"#577590","yellow_virus":"#F94144","leaf_mold":"#43AA8B","spider_mites":"#9B5DE5","healthy":"#06D6A5"};
+const NAMES2={"early_blight":"Úa sớm (đốm vòng)","septoria_leaf_spot":"Đốm lá Septoria","bacterial_spot":"Đốm vi khuẩn","late_blight":"Mốc sương (úa muộn)","mosaic_virus":"Virus khảm","yellow_virus":"Virus vàng/xoăn lá","leaf_mold":"Mốc lá","spider_mites":"Nhện hai chấm","healthy":"Lá khỏe"};
+let mockResult=null;
+
+/* Nút "Đổi ảnh" & "Lưu ảnh" hiện thay dropzone sau khi nạp ảnh */
+function showUploadMode(show){
+  drop.style.display=show?'':'none';
+  urlRow.style.display=show?'':'none';
+  tips.style.display=show?'':'none';
+}
+const changeCol=document.createElement('button');
+changeCol.className='cam-btn'; changeCol.textContent='🖼️ Đổi ảnh khác';
+changeCol.style.display='none';
+drop.before(changeCol);
+const saveBtn=document.createElement('button');
+saveBtn.className='cam-btn'; saveBtn.textContent='💾 Lưu ảnh kết quả';
+saveBtn.style.display='none';
+changeCol.before(saveBtn);
+const stageAnalyze=document.getElementById('stageAnalyze');
+
+changeCol.addEventListener('click',()=>{
+  mockResult=null; analyzed=false;
+  stage.style.display='none'; stageImg.src='';
+  sctx.clearRect(0,0,stageCanvas.width,stageCanvas.height);
+  document.getElementById('resBox').style.display='none';
+  document.getElementById('resEmpty').style.display='flex';
+  showUploadMode(true); changeCol.style.display='none'; saveBtn.style.display='none';
+  stageAnalyze.style.display='none';
+});
+
+/* Lưu ảnh kết quả: ghép ảnh gốc + canvas khung bệnh → tải về PNG */
+saveBtn.addEventListener('click',()=>{
+  if(!stageImg.naturalWidth)return;
+  const c=document.createElement('canvas');
+  c.width=stageImg.naturalWidth; c.height=stageImg.naturalHeight;
+  c.getContext('2d').drawImage(stageImg,0,0);
+  if(stageCanvas.width)c.getContext('2d').drawImage(stageCanvas,0,0);
+  const a=document.createElement('a');
+  a.href=c.toDataURL('image/png');
+  a.download='tomato_ket_qua_phan_tich.png';
+  a.click();
+});
+
+drop.addEventListener('click',()=>{const i=document.createElement('input');i.type='file';i.accept='image/*';
+  i.onchange=()=>showPrev(i.files[0]);i.click();});
+drop.addEventListener('dragover',e=>{e.preventDefault();drop.classList.add('over')});
+drop.addEventListener('dragleave',()=>drop.classList.remove('over'));
+drop.addEventListener('drop',e=>{e.preventDefault();drop.classList.remove('over');showPrev(e.dataTransfer.files[0])});
+
+document.getElementById('scanConf').addEventListener('input',e=>{
+  document.getElementById('scanConfVal').textContent=(+e.target.value).toFixed(2);
+  if(mockResult) runMock(); // bản chính thức sẽ gọi lại POST /api/detect với conf mới
+});
+document.getElementById('hideHealthy').addEventListener('change',()=>{ if(mockResult) runMock(); });
+
+function showPrev(f){
+  if(!f||!f.type.startsWith('image'))return;
+  const url=URL.createObjectURL(f);
+  // Giống web cũ: ảnh chiếm chỗ của dropzone, hiển thị Ảnh GỐC trước (chưa khoanh)
+  camBtn.style.display='none'; showUploadMode(false);
+  changeCol.style.display='block'; saveBtn.style.display='block';
+  stage.style.display='block'; stageAnalyze.style.display='block';
+  stageCanvas.width=stageCanvas.height=0; // xóa khung ảnh cũ — ảnh gốc chưa có khoanh
+  // Chuẩn bị kết quả ví dụ — chỉ dùng khi bấm "Phân tích bệnh"
+  stageImg.onload=()=>{
+    mockResult={image:{w:stageImg.naturalWidth,h:stageImg.naturalHeight},ms:34,
+      det:[
+        {slug:"early_blight", score:0.912, box:[0.08,0.18,0.52,0.72]},
+        {slug:"bacterial_spot", score:0.878, box:[0.55,0.35,0.92,0.83]},
+      ]};
+  };
+  stageImg.src=url;
+}
+
+stageAnalyze.addEventListener('click',()=>{ if(mockResult) runMock(); });
+
+function runMock(){
+  const conf=+document.getElementById('scanConf').value;
+  const hidden=document.getElementById('hideHealthy').checked;
+  document.getElementById('resEmpty').style.display='none';
+  document.getElementById('resBox').style.display='block';
+
+  // Gate: ảnh không phải lá cà chua → KHÔNG hiển thị kết quả bệnh
+  if(!looksLikeTomatoLeaf()){
+    document.getElementById('resTitle').textContent='Không thể nhận diện';
+    document.getElementById('detList').innerHTML=
+      tomatoWarn('Ảnh này không phải là lá cà chua.');
+    document.querySelector('#resBox .advice').style.display='none';
+    stageCanvas.width=stageCanvas.height=0; // không khoanh gì lên ảnh
+    return;
+  }
+  document.querySelector('#resBox .advice').style.display='';
+  let dets=mockResult.det.filter(d=>d.score>=conf && !(hidden&&d.slug==='healthy'));
+  document.getElementById('resTitle').textContent=`Kết quả (${dets.length})`;
+  document.getElementById('resMs').textContent=mockResult.ms;
+
+  // Danh sách kết quả — giống ResultList của web cũ
+  document.getElementById('detList').innerHTML=dets.map(d=>{
+    const c=COLORS2[d.slug];
+    return `<div class="det"><span class="dot" style="background:${c}"></span>
+      <strong>${NAMES2[d.slug]}</strong>
+      <small style="color:var(--muted)">${d.slug}</small>
+      <span class="conf">${(d.score*100).toFixed(1)}%</span></div>`;
+  }).join('')||'<p style="font-size:12.5px;color:var(--muted)">Chưa có vùng bệnh nào được phát hiện.</p>';
+
+  // Vẽ khung — giống OverlayCanvas/drawBoxes của web cũ
+  const w=stageCanvas.width=stageImg.naturalWidth, h=stageCanvas.height=stageImg.naturalHeight;
+  sctx.clearRect(0,0,w,h);
+  dets.forEach(d=>{
+    const [x1,y1,x2,y2]=d.box, c=COLORS2[d.slug];
+    sctx.lineWidth=Math.max(2,w/250); sctx.strokeStyle=c;
+    sctx.strokeRect(x1*w,y1*h,(x2-x1)*w,(y2-y1)*h);
+    const label=`${NAMES2[d.slug]} ${(d.score*100).toFixed(0)}%`;
+    sctx.font=`bold ${Math.max(14,w/45)}px sans-serif`;
+    const tw=sctx.measureText(label).width+10, th=Math.max(20,h/28);
+    sctx.fillStyle=c;
+    sctx.fillRect(x1*w,Math.max(0,y1*h-th),tw,th);
+    sctx.fillStyle='#fff'; sctx.fillText(label,x1*w+5,Math.max(th-6,y1*h-7));
+  });
+}
+
+/* ================= Camera trực tiếp + WebSocket YOLO11s ================= */
+(function(){
+  const WS_URL="ws://127.0.0.1:8000/ws/detect";
+  const MODEL="yolo11s_coco";
+  const COLORS={"early_blight":"#E76F51","septoria_leaf_spot":"#F4A261","bacterial_spot":"#E9C46A","late_blight":"#2A9D8F","mosaic_virus":"#577590","yellow_virus":"#F94144","leaf_mold":"#43AA8B","spider_mites":"#9B5DE5","healthy":"#06D6A5"};
+  const NAMES={"early_blight":"Úa sớm","septoria_leaf_spot":"Đốm Septoria","bacterial_spot":"Đốm vi khuẩn","late_blight":"Mốc sương","mosaic_virus":"Virus khảm","yellow_virus":"Virus vàng xoăn","leaf_mold":"Mốc lá","spider_mites":"Nhện hai chấm","healthy":"Lá khỏe"};
+
+  let stream=null, ws=null, conf=0.25, active=false, frameId=0, inFlight=false;
+  let lastFpsT=performance.now(), fpsCount=0;
+  const video=document.getElementById('liveVideo'), canvas=document.getElementById('liveCanvas'),
+        ctx=canvas.getContext('2d'), status=document.getElementById('wsStatus'),
+        fpsBadge=document.getElementById('fpsBadge'), detBox=document.getElementById('liveDets');
+
+  const setConf=v=>{conf=+v; document.getElementById('confVal').textContent=conf.toFixed(2); if(ws&&ws.readyState===1) sendConfig();};
+  document.getElementById('confSlider').addEventListener('input',e=>setConf(e.target.value));
+
+  function setStatus(txt,cls){
+    status.textContent="● "+txt;
+    status.style.background=cls==='ok'?'var(--green-100)':cls==='warn'?'#fef6dd':'#f1f5f2';
+    status.style.color=cls==='ok'?'var(--green-700)':cls==='warn'?'#8a6d00':'var(--muted)';
+  }
+
+  function connect(){
+    try{ ws=new WebSocket(WS_URL); }catch(e){ setStatus('Lỗi WebSocket','warn'); return; }
+    ws.binaryType='arraybuffer';
+    ws.onopen=()=>{ setStatus('Kết nối AI (yolo11s_coco)','ok'); sendConfig(); };
+    ws.onmessage=ev=>{
+      if(typeof ev.data!=='string')return;
+      try{
+        const r=JSON.parse(ev.data);
+        if(r.type==='result'){
+          inFlight=false;
+          document.getElementById('liveEmpty').style.display='none';
+          drawDetections(r);
+          renderDets(r.detections||[]);
+          fpsCount++;
+          const now=performance.now();
+          if(now-lastFpsT>=1000){ fpsBadge.innerHTML=`FPS ${fpsCount} · latency ${Math.round(r.inference_ms||0)} ms`; fpsCount=0; lastFpsT=now; }
+        }
+      }catch(e){}
+    };
+    ws.onclose=()=>{ setStatus('AI ngắt kết nối (chạy: tdet serve)','warn'); ws=null; };
+    ws.onerror=()=>{ setStatus('Không nối được AI tại '+WS_URL,'warn'); };
+  }
+  function sendConfig(){
+    if(ws&&ws.readyState===1)
+      ws.send(JSON.stringify({type:'config',model:MODEL,conf,iou:0.5,imgsz:640,max_det:50,agnostic_nms:false}));
+  }
+  function sendFrame(){
+    if(!ws||ws.readyState!==1||inFlight||!active||video.readyState<2)return;
+    inFlight=true;
+    const w=Math.round(video.videoWidth), h=Math.round(video.videoHeight);
+    if(!w||!h){inFlight=false;return;}
+    const c=document.createElement('canvas'); c.width=w; c.height=h;
+    c.getContext('2d').drawImage(video,0,0,w,h);
+    c.toBlob(b=>{
+      if(b&&ws&&ws.readyState===1){ frameId++; b.arrayBuffer().then(jpeg=>{
+        // Gói khung đúng giao thức dự án: [4 byte frame_id big-endian][JPEG]
+        const packet=new Uint8Array(4+jpeg.byteLength);
+        new DataView(packet.buffer).setUint32(0,frameId,false);
+        packet.set(new Uint8Array(jpeg),4);
+        try{ws.send(packet.buffer);}catch(e){inFlight=false;}
+      });} else inFlight=false;
+    },'image/jpeg',0.7);
+  }
+
+  function drawDetections(r){
+    const w=canvas.width=video.videoWidth, h=canvas.height=video.videoHeight;
+    if(!w)return;
+    canvas.style.display='block';
+    ctx.clearRect(0,0,w,h);
+    (r.detections||[]).forEach(d=>{
+      const [x1,y1,x2,y2]=d.box;
+      const color=COLORS[d.class_name]||'#22c55e';
+      ctx.lineWidth=Math.max(2,w/300); ctx.strokeStyle=color;
+      ctx.strokeRect(x1*w,y1*h,(x2-x1)*w,(y2-y1)*h);
+      const label=`${NAMES[d.class_name]||d.class_name} ${Math.round(d.score*100)}%`;
+      ctx.font='bold 14px sans-serif';
+      const tw=ctx.measureText(label).width+10;
+      ctx.fillStyle=color;
+      ctx.fillRect(x1*w,Math.max(0,y1*h-20),tw,20);
+      ctx.fillStyle='#fff'; ctx.fillText(label,x1*w+5,Math.max(14,y1*h-6));
+    });
+  }
+  function renderDets(dets){
+    detBox.innerHTML=dets.map(d=>{
+      const c=COLORS[d.class_name]||'#22c55e';
+      return `<div class="det"><span class="dot" style="background:${c}"></span>
+        ${NAMES[d.class_name]||d.class_name} <small style="color:var(--muted)">(${d.class_name})</small>
+        <span class="conf">${Math.round(d.score*100)}%</span></div>`;
+    }).join('')||'<p style="font-size:12.5px;color:var(--muted)">Khung hình hiện tại: không phát hiện bệnh.</p>';
+  }
+
+  async function tick(){
+    if(!active)return;
+    sendFrame();
+    requestAnimationFrame(tick);
+  }
+
+  document.getElementById('camOn').addEventListener('click',async()=>{
+    if(active)return;
+    try{
+      stream=await navigator.mediaDevices.getUserMedia({video:{width:640,height:480}});
+      video.srcObject=stream; video.style.display='block';
+      document.getElementById('livePlaceholder').style.display='none';
+      active=true;
+      connect();
+      tick();
+    }catch(e){ setStatus('Không mở được camera: '+e.name,'warn'); }
+  });
+
+  document.getElementById('camOff').addEventListener('click',()=>{
+    active=false;
+    if(stream){stream.getTracks().forEach(t=>t.stop()); stream=null;}
+    video.style.display='none'; canvas.style.display='none';
+    document.getElementById('livePlaceholder').style.display='flex';
+    detBox.innerHTML='';
+    document.getElementById('liveEmpty').style.display='flex';
+    if(ws){ws.close(); ws=null;}
+    setStatus('Chưa kết nối AI','');
+    fpsBadge.textContent='FPS — · latency — ms';
+  });
+})();
+
+/* Dataset viewer — đọc ảnh thật từ dự án, mở file từ thư mục gốc */
+const SPLITS={
+  val:['train/140714+%2811%29.JPG.jpg','train/1422_0.jpeg.jpg','train/28619919393_7ef44acccc_b.jpg','train/3893.jpg','train/4853086777_bc41d29801.jpg','train/5579e3247db73.image.jpg','train/8226402609_62d16884a7_b.jpg','train/BacterialSpot06.jpg','train/IMG_3192.JPG.jpg','train/IU-TYLCV_img_6.jpg','train/Leaf+Mold+upper+leaf+surface.jpg','train/Septoria-Tomato.jpg','train/Tomato-Early-Blight-Leaf-Examples-Cornell-University.jpg','train/late_blight_drought_leaves1x1200.jpg','train/dscn3168.jpg','train/img_6635.jpg'],
+  test:['test/%2320+Bacterial+Spot+and+Speck.jpg','test/0.jpg','test/039b47d574bc4bb8a14259a1cd96a741.jpg','test/07.17.18-Common_Tomato_Diseases_Canker-258x300.jpg','test/100983448.jpg','test/110822-206-Tomato-blight.jpg','test/1234080-Early-Blight.jpg','test/1684.jpg','test/17fc47.jpg','test/2013-08-20-06.jpg'],
+  train:['train/003.JPG.jpg','train/009-e1373768789869.jpg','train/05-069f1.jpg','train/05-069f12.jpg','train/05-069f9.jpg','train/1422_0.jpeg.jpg','train/3893.jpg','train/100_4542.jpg','train/118A_Tom_Late.jpg','train/119B_Tom_Mold.jpg','train/128110613-56a6d3633df78cf7729070ad.jpg','train/12July_mwnews_3-C.jpg','train/3-septoria-leaf-blight-n.jpg','train/1576389-early%20blight%20symptoms.jpg']
+};
+function renderGal(name){
+  const base='data/processed/tomato_yolo/images/';
+  // Thư mục processed chia theo SPLIT (images/val, images/test, images/train),
+  // còn đường dẫn trong splits/*.txt mang tiền tố NGUỒN GỐC (train/xxx) → thay bằng thư mục split
+  const enc=s=>encodeURIComponent(s);
+  document.getElementById('gallery').innerHTML=SPLITS[name].map(p=>{
+    const leaf=p.split('/').pop();
+    const src=base+name+'/'+enc(leaf);
+    return `<figure title="${p}" data-name="${leaf}"><img src="${src}" alt=""
+      onerror="this.parentNode.innerHTML='<figcaption style=&quot;padding:24px 4px&quot;>Demo offline</figcaption>'">
+      <figcaption>${leaf.slice(0,26)}</figcaption></figure>`;
+  }).join('');
+}
+renderGal('val');
+// Bấm ảnh dataset → xem tận dụng lightbox dùng chung
+document.getElementById('gallery').addEventListener('click',e=>{
+  const fig=e.target.closest('figure');
+  if(!fig||!fig.dataset.name)return;
+  document.getElementById('lxImg').src=fig.querySelector('img').src;
+  document.getElementById('lxTitle').textContent=fig.title;
+  document.getElementById('lightbox').style.display='flex';
+});
+document.querySelectorAll('#segSplit button').forEach(b=>b.addEventListener('click',()=>{
+  document.querySelectorAll('#segSplit button').forEach(x=>x.classList.remove('active'));
+  b.classList.add('active'); renderGal(b.dataset.s);
+}));
+
+/* Disease library */
+const LIB=[
+  ['#E76F51','Úa sớm (early_blight)','Nấm Alternaria solani. Đốm tròn đồng tâm màu nâu như vầng đá, lan từ lá dưới lên trên.','train/1576389-early%20blight%20symptoms.jpg'],
+  ['#F4A261','Đốm Septoria (septoria_leaf_spot)','Nấm Septoria lycopersici. Chấm nhỏ tròn 2–3 mm, trung tâm xám viền tím, lá khô rồi rụng.','train/3-septoria-leaf-blight-n.jpg'],
+  ['#E9C46A','Đốm vi khuẩn (bacterial_spot)','Xanthomonas spp. Đốm tối bóng nước, mép vàng, lá rách như bị đạn bắn.','train/Bacterial+Spot+-+Tomatoes.jpg'],
+  ['#2A9D8F','Mốc sương / úa muộn (late_blight)','Phytophthora infestans. Vết loang mờ sũng nước, mặt dưới có lớp lông mốc trắng.','train/2017-08-27%2B-%2BLate%2BBlight%2Bon%2BGypsy%2B1.jpg'],
+  ['#577590','Virus khảm (mosaic_virus)','Tomato mosaic virus. Lá nhổn, xanh vàng lốm đốm khảm, cây lùn.','train/3-tomato-mosaic-virus_web.jpg'],
+  ['#F94144','Virus vàng xoăn (yellow_virus)','TYLCV. Lá vàng xoăn lên, nhỏ lại, hoa rụng, khó ra quả.','train/tomato-plant-virus-tomato-yellow-leaf-curl-virus-tomato-plant-disease-mosaic-virus.jpg'],
+  ['#43AA8B','Mốc lá (leaf_mold)','Fulvia fulva. Mặt trên có vệt vàng nhợt, mặt dưới phủ lớp mốc olive xám.','train/Leaf+mold+tomato+%25282%2529.JPG.jpg'],
+  ['#9B5DE5','Nhện hai chấm (spider_mites)','Tetranychus urticae. Lá đầy chấm li ti vàng trắng, mặt dưới có mạng nhện mỏng.','train/SpotSpeckBlightMite-1l4v879.jpg'],
+  ['#06D6A5','Lá khỏe (healthy)','Không phát hiện triệu chứng bệnh — nhận diện để giảm báo động nhầm.','train/8.--Virus-Damaged-foliage-at-top-versus-healthy,-non-infected-bottom-foliage.jpg']
+];
+const LIB_BASE='data/processed/tomato_yolo/images/';
+const enc=p=>p.split('/').map(encodeURIComponent).join('/');
+document.getElementById('libGrid').innerHTML=LIB.map(([c,n,d,img])=>`
+  <div class="item">
+    <img class="lib-img" src="${LIB_BASE}${enc(img)}" alt="${n}"
+      onerror="this.style.display='none'">
+    <span class="dot" style="display:inline-block;background:${c}"></span>
+  <h3>${n}</h3><p>${d}</p>
+  <small style="color:var(--muted); font-size:10.5px">📸 Ảnh minh họa: dataset val/test thật</small></div>`).join('');
+
+/* Bấm ảnh minh họa → phóng to xem */
+const lx=document.getElementById('lightbox');
+lx.addEventListener('click',()=>lx.style.display='none');
+document.querySelectorAll('.lib-img').forEach(img=>img.addEventListener('click',e=>{
+  e.stopPropagation();
+  const card=img.closest('.item').querySelector('h3').textContent;
+  document.getElementById('lxImg').src=img.src;
+  document.getElementById('lxTitle').textContent=card;
+  lx.style.display='flex';
+}));
+
+/* ---------- Giới hạn: chỉ nhận diện LÁ CÀ CHUA ----------
+   Demo: heuristic "xanh lá" (lá cà chua đa số pixel có kênh G trội).
+   Bản chính thức: backend gate nhận diện loài trước khi YOLO chạy. */
+function looksLikeTomatoLeaf(){
+  const n=Math.min(1,120/Math.max(1,stageImg.naturalWidth));
+  const c=document.createElement('canvas');
+  c.width=Math.max(20,Math.round(stageImg.naturalWidth*n));
+  c.height=Math.max(20,Math.round(stageImg.naturalHeight*n));
+  c.getContext('2d').drawImage(stageImg,0,0,c.width,c.height);
+  const d=c.getContext('2d').getImageData(0,0,c.width,c.height).data;
+  let green=0,total=0;
+  for(let i=0;i<d.length;i+=4){
+    total++;
+    if(d[i+1]>d[i]&&d[i+1]>d[i+2]&&d[i+1]>45) green++; // kênh G trội
+  }
+  return green/Math.max(1,total)>=0.14;
+}
+const tomatoWarn=(msg)=>(
+  `<div class="warnbox">🚫 <b>${msg}</b><br>` +
+  `Hệ thống chỉ nhận diện bệnh trên <b>lá cà chua</b>. Hãy chụp hoặc tải ảnh <b>lá cà chua</b> rõ nét.</div>`
+);
+</script>
+</body>
+</html>
