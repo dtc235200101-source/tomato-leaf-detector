@@ -1,0 +1,16 @@
+# Runtime dependencies for the deployed inference service only.
+# PyTorch and torchvision are NOT listed here: they are installed from the CPU
+# wheel index in the Dockerfile (CPU/CUDA wheels differ per platform).
+# Training/evaluation tooling (torchmetrics, pycocotools, scikit-learn, pandas,
+# matplotlib) is intentionally excluded to keep the deployed image small.
+ultralytics>=8.3,<9
+fastapi>=0.115,<1
+uvicorn[standard]>=0.30,<1
+python-multipart>=0.0.9,<1
+pydantic>=2.7,<3
+pydantic-settings>=2.3,<3
+typer>=0.12,<1
+PyYAML>=6,<7
+Pillow>=10,<12
+numpy>=1.26,<3
+ImageHash>=4.3,<5

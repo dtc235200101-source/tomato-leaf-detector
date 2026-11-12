@@ -16,4 +16,6 @@ weights
 *.pt
 *.onnx
 *.engine
+# The deploy checkpoint is the only weight shipped into the image.
+!deploy/model/best.pt
 .env

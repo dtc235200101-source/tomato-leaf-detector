@@ -1,10 +1,12 @@
 services:
   - type: web
-    name: tomato-leaf-detector-api
+    name: tomato-leaf-detector
     runtime: docker
-    plan: starter
+    plan: free
+    region: singapore
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
     healthCheckPath: /api/health
-    autoDeploy: false
     envVars:
       - key: TDET_DEVICE
         value: cpu

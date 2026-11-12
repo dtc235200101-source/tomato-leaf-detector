@@ -8,7 +8,7 @@
 
 <!-- TODO: thêm docs/demo.gif (live preview) sau khi hoàn thành Phase 5 -->
 
-**Tài liệu đi kèm:** [PLAN.md](PLAN.md) (kế hoạch + thiết kế thí nghiệm) · [AGENT.md](AGENT.md) (luật + hợp đồng giao diện cho AI Agent) · [PROMPT.md](PROMPT.md) (bộ prompt giao việc cho AI Agent)
+**Tài liệu đi kèm:** [PLAN.md](PLAN.md) (kế hoạch + thiết kế thí nghiệm) · [AGENT.md](AGENT.md) (luật + hợp đồng giao diện cho AI Agent) · [PROMPT.md](PROMPT.md) (bộ prompt giao việc cho AI Agent) · [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) (đưa app từ localhost lên online bằng Render)
 
 ---
 
